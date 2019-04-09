@@ -42,8 +42,8 @@ struct SquareEntity {
 	glm::vec2 direction;
 	GLuint color;
 
-	float width = 1.0f;
-	float height = 1.0f;
+	float width = 1;
+	float height = 1;
 
 };
 
@@ -55,12 +55,16 @@ public:
 		this->bounds = bounds;
 	}
 
+	~Quadtree(){
+		Clear();
+		delete bounds;
+	}
 	//Clears quadtree
 	void Clear() {
-		entities.clear(); //no need to delete entites, since the 100 squares declared will always exist until the program ends. 
-		
-		for (Quadtree* node : nodes) delete node;
-		
+		std::vector<SquareEntity>().swap(entities);
+		for (Quadtree* node : nodes) {
+			delete node;
+		}
 		nodes.clear();
 	}
 
@@ -79,17 +83,17 @@ public:
 	/*
 	  Determine which node the object belongs to. -1 means object cannot completely fit within a child node and is part of the parent node
 	*/
-	int GetIndex(SquareEntity* entity)
+	int GetIndex(SquareEntity entity)
 	{
 		int index = -1;
 
 		double vertical_midpoint = bounds->x + (bounds->width / 2.0f);
 		double horizontal_midpoint = bounds->y + (bounds->height / 2.0f);
 
-		bool inLeft   =		(entity->position.x < vertical_midpoint && entity->position.x + entity->width < vertical_midpoint);
-		bool inRight  =		(entity->position.x >= vertical_midpoint && entity->position.x + entity->width >= vertical_midpoint);
-		bool inTop    =		(entity->position.y < horizontal_midpoint && entity->position.y + entity->height < horizontal_midpoint);
-		bool inBottom =		(entity->position.y >= horizontal_midpoint && entity->position.y + entity->height >= horizontal_midpoint);
+		bool inLeft   =		(entity.position.x < vertical_midpoint && entity.position.x + entity.width < vertical_midpoint);
+		bool inRight  =		(entity.position.x >= vertical_midpoint && entity.position.x + entity.width >= vertical_midpoint);
+		bool inTop    =		(entity.position.y < horizontal_midpoint && entity.position.y + entity.height < horizontal_midpoint);
+		bool inBottom =		(entity.position.y >= horizontal_midpoint && entity.position.y + entity.height >= horizontal_midpoint);
 
 		if (inLeft)
 		{
@@ -106,7 +110,7 @@ public:
 	}
 
 
-	void Insert(SquareEntity *entity)
+	void Insert(SquareEntity entity)
 	{
 		if (this->nodes.size() > 0 && this->nodes[0] != NULL)
 		{
@@ -141,7 +145,7 @@ public:
 	}
 
 
-	void Retrieve(std::vector<SquareEntity*> *returnedEntities, SquareEntity* entity)
+	void Retrieve(std::vector<SquareEntity> *returnedEntities, SquareEntity entity)
 	{
 		int index = GetIndex(entity);
 		if (index != -1 && nodes.size() != 0) nodes[index]->Retrieve(returnedEntities, entity);
@@ -149,11 +153,12 @@ public:
 	}
 
 private:
-	const int MAX_ENTITIES = 3; //maximum objects a node can contain before splitting
-	const int MAXIMUM_LEVELS = 6;	//constraint: deepest level a subnode can be
+	const int MAX_ENTITIES = 4; //maximum objects a node can contain before splitting    3-6
+	const int MAXIMUM_LEVELS = 8;	//constraint: deepest level a subnode can be
 
 	int level; //current level
 	Rectangle* bounds;
-	std::vector<SquareEntity*> entities = {}; //entities within this node
+	std::vector<SquareEntity> entities = {}; //entities within this node
 	std::vector<Quadtree*> nodes = {};
+
 };
