@@ -1,11 +1,10 @@
 #pragma once
 
 
-GLfloat leftBounds = -125,
+int leftBounds = -125,
 rightBounds = 125,
 topBounds = 100,
 bottomBounds = -100;
-
 
 
 
@@ -16,30 +15,22 @@ public:
 	float y;
 	float width;
 	float height;
-	int id;
+
 	Rectangle(float x, float y, float width, float height)
 	{
 		this->x = x;
 		this->y = y;
 		this->width = width;
 		this->height = height;
-		this->id = -1;
+	
 	}
-	Rectangle(int id, float x, float y, float width, float height)
-	{
-		this->x = x;
-		this->y = y;
-		this->width = width;
-		this->height = height;
-		this->id = id;
-	}
+
 	Rectangle()
 	{
 		this->x = 0;
 		this->y = 0;
 		this->width = 0;
 		this->height = 0;
-		this->id = -1;
 	}
 };
 
@@ -66,13 +57,10 @@ public:
 
 	//Clears quadtree
 	void Clear() {
-
 		entities.clear(); //no need to delete entites, since the 100 squares declared will always exist until the program ends. 
 		
-
-		for (Quadtree* node : nodes) {
-			delete node;
-		}
+		for (Quadtree* node : nodes) delete node;
+		
 		nodes.clear();
 	}
 
@@ -153,45 +141,16 @@ public:
 	}
 
 
-	void Retrieve(std::vector<SquareEntity> *returnedEntities, SquareEntity* entity)
+	void Retrieve(std::vector<SquareEntity*> *returnedEntities, SquareEntity* entity)
 	{
-
 		int index = GetIndex(entity);
-
 		if (index != -1 && nodes.size() != 0) nodes[index]->Retrieve(returnedEntities, entity);
-
-		for (int i = 0;i < entities.size();i++)
-			returnedEntities->push_back(*entities[i]);
-			
-
-		/*
-		// push back object IDs from this quadtree
-		for (int i = 0; i < entities.size(); ++i) {
-			returnedEntities.push_back(entities[i]);
-		}
-
-		int index = GetIndex(entity);
-		if (index == -1) { // push back object IDs from all children
-			for (int i = 0; i < nodes.size(); ++i) {
-				if (nodes[i] != NULL) {
-					nodes[i]->Retrieve(returnedEntities, entity);
-				}
-			}
-		}
-		else { // push back object IDs from child given by index
-			if (index < nodes.size()) {
-				if (nodes[index] != NULL) {
-					nodes[index]->Retrieve(returnedEntities, entity);
-				}
-			}
-		}
-		*/
-
+		returnedEntities->insert(returnedEntities->end(), entities.begin(), entities.end());
 	}
 
 private:
-	const int MAX_ENTITIES = 10; //maximum objects a node can contain before splitting
-	const int MAXIMUM_LEVELS = 10;	//constraint: deepest level a subnode can be
+	const int MAX_ENTITIES = 3; //maximum objects a node can contain before splitting
+	const int MAXIMUM_LEVELS = 6;	//constraint: deepest level a subnode can be
 
 	int level; //current level
 	Rectangle* bounds;

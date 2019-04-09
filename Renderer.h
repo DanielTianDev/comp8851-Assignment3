@@ -1,7 +1,6 @@
 #pragma once
 
 /**
-
 	Renderer class - openGL is used for rendering. In this class, I've setup a very basic render loop which 
 		1. Updates squares positional data based on their individual speed and velocities
 		2. Checks for collisions with quadtree, and set colliding squares colors to red or back to white if they  aren't colliding anymore
@@ -41,7 +40,7 @@ using namespace glm;
 Quadtree* quadTree = new Quadtree(0, new Rectangle(leftBounds, bottomBounds, rightBounds, topBounds));
 
 //100 squares
-std::vector<SquareEntity> squares(100);
+std::vector<SquareEntity> squares(400);
 
 //opengl variables
 GLuint VertexArrayID;
@@ -52,9 +51,7 @@ GLuint MatrixID;
 GLuint programID;
 
 // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 10000 units
-glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 10000.0f);
-// Or, for an ortho camera :
-//glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
+glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 1000.0f);
 
 // Camera matrix
 glm::mat4 View = glm::lookAt(
@@ -70,14 +67,12 @@ glm::mat4 Model = glm::mat4(1.0f);
 glm::mat4 MVP = Projection * View * Model; // Remember, matrix multiplication is the other way around
 
 static const GLfloat g_vertex_buffer_data[] = { //2 triangles -> square
-
--1.0f, 1.0f, 0.0f,
--1.0f, -1.0f, 0.0f,
-1.0f, 1.0f, 0.0f,
-
-1.0f, -1.0f, 0.0f,
--1.0f, -1.0f, 0.0f,
-1.0f, 1.0f, 0.0f,
+	-1.0f, 1.0f, 0.0f,
+	-1.0f, -1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
+	1.0f, -1.0f, 0.0f,
+	-1.0f, -1.0f, 0.0f,
+	1.0f, 1.0f, 0.0f,
 };
 
 static const GLfloat colorDataWhite[] = {
@@ -100,7 +95,7 @@ static const GLfloat colorDataRed[] = {
 
 glm::vec2 getRandomDirection(glm::vec2 currentPosition) {
 
-	float randomX = (rand() % 250) - 125;
+	float randomX = (rand() % 200) - 100;
 	float randomY = (rand() % 200) - 100;
 
 	glm::vec2 randomXY = glm::vec2(randomX, randomY);
@@ -117,19 +112,19 @@ glm::vec2 getRandomDirection(glm::vec2 currentPosition) {
 void InitializeSquares() {
 
 	//Initialize 100 squares, give them all random starting locations, speed, as well as a direction 
-	float LO = 0.05;
-	float HI = 0.1f;
+	float LO = 0.25f;
+	float HI = .85f;
 
 	//setup square entites with initial randomized data
 	for (int i = 0;i < squares.size();i++) {
 
 		squares[i].id = i;
 
-		int r1 = rand() % 250; //random value between 0 and 250 or 249?
-		int r2 = rand() % 200;
+		int r1 = rand() % (rightBounds*2); //random value between 0 and 250 or 249?
+		int r2 = rand() % (topBounds*2);
 
-		squares[i].position.x = r1 - 125;	//set initial position
-		squares[i].position.y = r2 - 100;
+		squares[i].position.x = r1 - rightBounds;	//set initial position
+		squares[i].position.y = r2 - topBounds;
 
 		squares[i].color = colorbufferWhite;	//set initial color to be white
 
@@ -157,6 +152,36 @@ void UpdateAndRenderSquare(GLuint MatrixID, GLuint vertexbuffer, SquareEntity *s
 	}
 
 	Model = glm::translate(glm::mat4(1.0f), glm::vec3(square->position.x, square->position.y, 0));	//Update model's coordinates in the shader program
+
+
+
+	//Retrieve a list of all other squares in the same quadrant as this square
+	std::vector<SquareEntity*> *returnedEntities = new std::vector<SquareEntity*>; //std::vector<SquareEntity> *returnedEntities = new std::vector<SquareEntity>;
+		
+	quadTree->Retrieve(returnedEntities, square);
+
+	bool hasCollided = false;
+
+	for (int j = 0; j < returnedEntities->size(); j++) {//do collision checks here
+
+		if (returnedEntities->at(j)->id == square->id) continue;
+
+		float distance = sqrtf(powf((returnedEntities->at(j)->position.x - square->position.x), 2) +
+			powf((returnedEntities->at(j)->position.y - square->position.y), 2));
+
+		if (distance < 2) {
+			square->color = colorbufferRed;
+			hasCollided = true;
+			break;
+		}
+
+	}
+
+	if (!hasCollided) square->color = colorbufferWhite;
+	
+
+	delete returnedEntities;
+
 
 	// ModelViewProjection -> multiplication of our 3 matrices
 	glm::mat4 MVP = Projection * View * Model; // self note: matrix multiplication is the other way around
@@ -245,8 +270,6 @@ GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_pat
 		printf("%s\n", &FragmentShaderErrorMessage[0]);
 	}
 
-
-
 	// Link the program
 	printf("Linking program\n");
 	GLuint ProgramID = glCreateProgram();
@@ -262,7 +285,6 @@ GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_pat
 		glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
 		printf("%s\n", &ProgramErrorMessage[0]);
 	}
-
 
 	glDetachShader(ProgramID, VertexShaderID);
 	glDetachShader(ProgramID, FragmentShaderID);
@@ -289,8 +311,8 @@ int InitializeOpenGL() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We don't want the old OpenGL 
 
-	// Open a window and create its OpenGL context
-	window = glfwCreateWindow(1024, 768, "Tutorial 03 - Matrices", NULL, NULL);
+	// Open a window and create its OpenGL context - 1024, 768
+	window = glfwCreateWindow(1500, 1500, "Assignment3-Quadtree", NULL, NULL);
 	if (window == NULL) {
 		fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
 		getchar();
@@ -349,7 +371,7 @@ int GameLoop() {
 
 	InitializeSquares();
 	
-	glClearColor(0.345f, 0.48f, 0.353f, 1.0f);	//set background color to dark green
+	glClearColor(0,0,0, 1.0f);	//set background color to dark green 0.345f, 0.48f, 0.353f, 1.0f
 
 
 	//main game loop
@@ -359,36 +381,7 @@ int GameLoop() {
 		quadTree->Clear();	//every frame: clear the quadtree, then insert all squares into the quadtree
 		for (int i = 0; i < squares.size(); i++) quadTree->Insert(&squares[i]); 
 		
-
-		//Retrieve a list of all other squares in the same quadrant as this square
-		std::vector<SquareEntity> *returnedEntities = new std::vector<SquareEntity>;
-		for (int i = 0; i < squares.size(); i++) {
-			returnedEntities->clear();
-			quadTree->Retrieve(returnedEntities, &squares[i]);
-
-			bool hasCollided = false;
-			for (int j = 0;j < returnedEntities->size();j++) {//do collision checks here
-
-				if (returnedEntities->at(j).id == squares[i].id) continue;
-
-				float distance = sqrtf( powf((returnedEntities->at(j).position.x  - squares[i].position.x),2) + 
-										powf((returnedEntities->at(j).position.y - squares[i].position.y), 2));
-				
-				if (distance < 1.0f) {
-					squares[i].color = colorbufferRed;
-					hasCollided = true;
-				}
-
-			}
-
-			if (!hasCollided) squares[i].color = colorbufferWhite;
-		}
-
-
-		for (int i = 0; i < squares.size(); i++)	UpdateAndRenderSquare(MatrixID, vertexbuffer, &squares[i]); //Render all squares, as well as update their directions if they've hit the boundaries of the screen
-
-
-		delete returnedEntities;
+		for (int i = 0; i < squares.size(); i++) UpdateAndRenderSquare(MatrixID, vertexbuffer, &squares[i]); //Render all squares, as well as update their directions if they've hit the boundaries of the screen
 
 		// Swap buffers
 		glfwSwapBuffers(window);
