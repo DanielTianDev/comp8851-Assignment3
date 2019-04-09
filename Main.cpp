@@ -1,4 +1,4 @@
-// Include standard headers
+
 #include "Renderer.h"
 
 
@@ -7,7 +7,7 @@
 int main(void)
 {
 	
-	RenderLoop();
+	GameLoop();
 
 	return 0;
 }
