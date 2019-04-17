@@ -13,11 +13,6 @@
 
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream>
-#include <vector>
-#include <string>
 
 #include <fstream>
 #include <algorithm>
@@ -40,7 +35,7 @@ using namespace glm;
 Quadtree* quadTree = new Quadtree(0, new Rectangle(leftBounds, bottomBounds, rightBounds, topBounds));
 
 //100 squares
-std::vector<SquareEntity> squares(1000);
+std::vector<SquareEntity> squares(300);
 
 //opengl variables
 GLuint VertexArrayID;
@@ -112,8 +107,8 @@ glm::vec2 getRandomDirection(glm::vec2 currentPosition) {
 void InitializeSquares() {
 
 	//Initialize 100 squares, give them all random starting locations, speed, as well as a direction 
-	float LO = 0.05f;
-	float HI = .5f;
+	float minimum_speed = 0.05f;
+	float max_speed = .1f;
 
 	//setup square entites with initial randomized data
 	for (int i = 0;i < squares.size();i++) {
@@ -130,7 +125,7 @@ void InitializeSquares() {
 
 		squares[i].direction = getRandomDirection(squares[i].position);	//sets initial velocity
 
-		float r = LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));	//starting speed between low and high
+		float r = minimum_speed + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (max_speed - minimum_speed)));	//starting speed between low and high
 		squares[i].speed = r;
 	}
 }
@@ -316,7 +311,7 @@ int InitializeOpenGL() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We don't want the old OpenGL 
 
 	// Open a window and create its OpenGL context - 1024, 768
-	window = glfwCreateWindow(1500, 1500, "Assignment3-Quadtree", NULL, NULL);
+	window = glfwCreateWindow(1000, 1000, "Assignment3-Quadtree", NULL, NULL);
 	if (window == NULL) {
 		fprintf(stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n");
 		getchar();

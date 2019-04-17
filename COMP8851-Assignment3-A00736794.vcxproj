@@ -129,8 +129,10 @@
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Hashing.h" />
     <ClInclude Include="Quadtree.h" />
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="RoundRobinScheduler.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

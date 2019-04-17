@@ -25,15 +25,9 @@ public:
 	
 	}
 
-	Rectangle()
-	{
-		this->x = 0;
-		this->y = 0;
-		this->width = 0;
-		this->height = 0;
-	}
 };
 
+//used to store data pertaining to rendered squares
 struct SquareEntity {
 	int id = 0;
 
